@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Kasir Pintar · FM99</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green-deep:#1F5D3A;
+    --green-ink:#123321;
+    --green-soft:#E4EEDF;
+    --mango:#E8871E;
+    --mango-deep:#C96D0E;
+    --ink:#1A2420;
+    --ink-soft:#5B665D;
+    --line:#DEE3D6;
+    --bg:#FFFFFF;
+    --surface:#FFFFFF;
+    --surface-2:#F4F6F0;
+    --danger:#B34B3C;
+    --danger-soft:#F6E4E0;
+    --shadow:0 1px 2px rgba(18,51,33,.06), 0 6px 20px rgba(18,51,33,.08);
+    --radius-s:8px;
+    --radius-m:14px;
+    --radius-l:22px;
+    --font-ui:'Space Grotesk',system-ui,-apple-system,sans-serif;
+    --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-ui);
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y:none;
+  }
+  button{font-family:inherit;cursor:pointer;}
+  input{font-family:inherit;}
+  .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+
+  .app{
+    max-width:1080px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding-bottom:86px;
+  }
+
+  /* ---------- Header ---------- */
+  .topbar{
+    background:var(--green-deep);
+    color:#fff;
+    padding:14px 16px 16px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    position:sticky;
+    top:0;
+    z-index:20;
+    box-shadow:var(--shadow);
+  }
+  .brandmark{
+    width:38px;height:38px;border-radius:10px;
+    background:rgba(255,255,255,.14);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .brand-text{display:flex;flex-direction:column;line-height:1.15;flex:1;min-width:0;}
+  .brand-text .name{font-weight:700;font-size:16px;letter-spacing:.2px;}
+  .brand-text .sub{font-size:11.5px;color:rgba(255,255,255,.75);}
+  .dailyChip{
+    background:rgba(255,255,255,.14);
+    border:none;color:#fff;
+    padding:8px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-family:var(--font-mono);
+    display:flex;flex-direction:column;align-items:flex-end;
+    line-height:1.3;
+    flex-shrink:0;
+  }
+  .dailyChip b{font-size:13px;}
+
+  /* ---------- Scan row ---------- */
+  .scanRow{
+    display:flex;
+    gap:8px;
+    padding:14px 16px 8px;
+  }
+  .scanField{
+    flex:1;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--surface);
+    border:1.5px solid var(--line);
+    border-radius:var(--radius-m);
+    padding:0 10px 0 14px;
+    height:52px;
+    box-shadow:var(--shadow);
+  }
+  .scanField svg{flex-shrink:0;color:var(--green-deep);}
+  .scanField input{
+    flex:1;border:none;outline:none;background:transparent;
+    font-size:15px;color:var(--ink);height:100%;
+    font-family:var(--font-mono);
+  }
+  .scanField input::placeholder{color:var(--ink-soft);font-family:var(--font-ui);}
+  .clearBtn{
+    border:none;background:var(--surface-2);color:var(--ink-soft);
+    width:26px;height:26px;border-radius:50%;font-size:15px;line-height:1;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .cameraBtn{
+    width:52px;height:52px;flex-shrink:0;
+    border:none;border-radius:var(--radius-m);
+    background:var(--green-deep);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:var(--shadow);
+  }
+  .cameraBtn:active{transform:scale(.95);}
+
+  /* ---------- Category chips ---------- */
+  .chips{
+    display:flex;gap:8px;overflow-x:auto;
+    padding:6px 16px 12px;
+    scrollbar-width:none;
+  }
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{
+    flex-shrink:0;
+    padding:8px 14px;
+    border-radius:999px;
+    border:1.5px solid var(--line);
+    background:var(--surface);
+    color:var(--ink-soft);
+    font-size:13px;
+    font-weight:500;
+    white-space:nowrap;
+  }
+  .chip.active{
+    background:var(--green-ink);
+    border-color:var(--green-ink);
+    color:#fff;
+  }
+
+  /* ---------- Product grid ---------- */
+  .grid{
+    flex:1;
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    padding:0 16px 20px;
+  }
+  @media(min-width:640px){ .grid{grid-template-columns:repeat(3,1fr);} }
+  @media(min-width:900px){ .grid{grid-template-columns:repeat(4,1fr);} }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    padding:12px;
+    text-align:left;
+    display:flex;flex-direction:column;gap:8px;
+    min-height:118px;
+    position:relative;
+    box-shadow:var(--shadow);
+  }
+  .card .catDot{
+    font-size:10px;color:var(--green-deep);
+    font-weight:600;letter-spacing:.3px;text-transform:uppercase;
+  }
+  .card .pname{
+    font-size:12.5px;font-weight:500;line-height:1.35;
+    flex:1;
+    color:var(--ink);
+  }
+  .card .prow{
+    display:flex;align-items:center;justify-content:space-between;gap:6px;
+  }
+  .card .price{
+    font-family:var(--font-mono);font-weight:600;font-size:13.5px;color:var(--green-deep);
+  }
+  .card .addBtn{
+    width:28px;height:28px;border-radius:50%;
+    border:none;background:var(--mango);color:#fff;
+    font-size:17px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .card .addBtn:active{transform:scale(.9);}
+  .card.inCart{border-color:var(--mango);}
+  .card .qtyBadge{
+    position:absolute;top:-8px;right:-8px;
+    background:var(--mango);color:#fff;
+    font-family:var(--font-mono);font-weight:700;font-size:11px;
+    min-width:20px;height:20px;border-radius:999px;
+    display:flex;align-items:center;justify-content:center;
+    padding:0 4px;
+    box-shadow:0 2px 5px rgba(0,0,0,.2);
+  }
+
+  .emptyState{
+    grid-column:1/-1;
+    display:flex;flex-direction:column;align-items:center;
+    padding:50px 20px;color:var(--ink-soft);
+    text-align:center;gap:10px;
+  }
+  .emptyState svg{opacity:.55;}
+  .emptyState b{color:var(--ink);font-weight:600;}
+
+  /* ---------- Bottom cart bar ---------- */
+  .cartBar{
+    position:fixed;left:0;right:0;bottom:0;
+    max-width:1080px;margin:0 auto;
+    background:var(--green-ink);
+    color:#fff;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;
+    z-index:25;
+    border-radius:var(--radius-l) var(--radius-l) 0 0;
+    box-shadow:0 -6px 24px rgba(0,0,0,.18);
+  }
+  .cartBarInfo{display:flex;flex-direction:column;gap:2px;}
+  .cartBarInfo .cnt{font-size:11.5px;color:rgba(255,255,255,.7);}
+  .cartBarInfo .tot{font-family:var(--font-mono);font-weight:700;font-size:18px;}
+  .cartBar button{
+    background:var(--mango);color:#fff;border:none;
+    padding:12px 18px;border-radius:999px;font-weight:600;font-size:13.5px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .cartBar button:disabled{background:#5b6156;opacity:.6;}
+
+  /* ---------- Overlays / Drawers ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(10,15,10,.5);
+    display:flex;align-items:flex-end;justify-content:center;
+    z-index:50;opacity:0;pointer-events:none;
+    transition:opacity .22s ease;
+  }
+  .overlay.open{opacity:1;pointer-events:auto;}
+  .drawer{
+    background:var(--surface);
+    width:100%;max-width:520px;
+    max-height:88vh;
+    border-radius:20px 20px 0 0;
+    display:flex;flex-direction:column;
+    transform:translateY(16px);
+    transition:transform .25s ease;
+    overflow:hidden;
+  }
+  .overlay.open .drawer{transform:translateY(0);}
+  .drawerHandle{
+    width:40px;height:4px;background:var(--line);border-radius:99px;
+    margin:10px auto 2px;flex-shrink:0;
+  }
+
+  .receiptHead{
+    text-align:center;padding:10px 20px 12px;
+    border-bottom:1px dashed var(--line);
+    flex-shrink:0;
+  }
+  .receiptHead h2{margin:0;font-size:15px;letter-spacing:.3px;}
+  .receiptHead .receiptSub{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+
+  .receiptList{
+    overflow-y:auto;flex:1;
+    padding:6px 20px;
+    font-family:var(--font-mono);
+    font-size:13px;
+  }
+  .rline{
+    display:flex;align-items:center;gap:8px;
+    padding:11px 0;
+    border-bottom:1px dashed var(--line);
+  }
+  .rline .rinfo{flex:1;min-width:0;}
+  .rline .rname{font-family:var(--font-ui);font-size:12.5px;font-weight:500;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rline .runit{color:var(--ink-soft);font-size:11.5px;}
+  .rline .rqty{
+    display:flex;align-items:center;gap:6px;
+    background:var(--surface-2);border-radius:999px;padding:3px;
+    flex-shrink:0;
+  }
+  .rline .rqty button{
+    width:22px;height:22px;border-radius:50%;border:none;
+    background:var(--surface);color:var(--ink);font-size:14px;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 1px 2px rgba(0,0,0,.1);
+  }
+  .rline .rqty span{min-width:16px;text-align:center;font-weight:600;}
+  .rline .rtotal{width:76px;text-align:right;font-weight:600;flex-shrink:0;}
+  .rline .rdel{
+    border:none;background:transparent;color:var(--danger);font-size:16px;flex-shrink:0;
+    width:20px;
+  }
+
+  .emptyCart{padding:40px 10px;text-align:center;color:var(--ink-soft);font-family:var(--font-ui);}
+
+  .receiptTotals{padding:12px 20px 4px;flex-shrink:0;}
+  .rowTotal{
+    display:flex;justify-content:space-between;
+    font-family:var(--font-mono);font-size:16px;font-weight:700;
+    color:var(--green-deep);
+  }
+
+  .cashSection{padding:10px 20px 4px;flex-shrink:0;}
+  .cashSection label{font-size:11.5px;color:var(--ink-soft);font-weight:600;letter-spacing:.2px;}
+  .cashSection input{
+    width:100%;margin-top:6px;
+    border:1.5px solid var(--line);border-radius:var(--radius-s);
+    padding:10px 12px;font-size:16px;font-family:var(--font-mono);
+    background:var(--surface-2);color:var(--ink);outline:none;
+  }
+  .cashSection input:focus{border-color:var(--mango);}
+  .quickCash{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .quickCash button{
+    border:1px solid var(--line);background:var(--surface);
+    border-radius:999px;padding:6px 11px;font-size:11.5px;
+    font-family:var(--font-mono);color:var(--ink);
+  }
+  .changeRow{
+    display:flex;justify-content:space-between;margin-top:10px;
+    font-family:var(--font-mono);font-size:14px;font-weight:600;
+  }
+  .changeRow.negative span:last-child{color:var(--danger);}
+  .changeRow span:last-child{color:var(--green-deep);}
+
+  .drawerActions{
+    display:flex;gap:10px;padding:14px 20px calc(16px + env(safe-area-inset-bottom));
+    flex-shrink:0;border-top:1px solid var(--line);
+  }
+  .drawerActions button{
+    flex:1;padding:13px;border-radius:12px;border:none;font-weight:600;font-size:14px;
+  }
+  #closeCartBtn{background:var(--surface-2);color:var(--ink);}
+  #checkoutBtn{background:var(--mango);color:#fff;}
+  #checkoutBtn:disabled{background:#c7cabf;color:#8a8f83;}
+
+  /* ---------- Scan overlay ---------- */
+  .scanOverlay{background:#000;align-items:stretch;}
+  .scanOverlay .scanTop{
+    position:absolute;top:0;left:0;right:0;z-index:2;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 18px;color:#fff;font-size:13px;
+  }
+  .scanOverlay .scanTop button{
+    background:rgba(255,255,255,.16);color:#fff;border:none;
+    padding:8px 14px;border-radius:999px;font-size:13px;
+  }
+  .scannerViewport{position:absolute;inset:0;overflow:hidden;background:#000;}
+  .scannerViewport video, .scannerViewport canvas{width:100%;height:100%;object-fit:cover;}
+  .scanFrame{
+    position:absolute;left:10%;right:10%;top:38%;height:24%;
+    border:2.5px solid var(--mango);border-radius:14px;
+    box-shadow:0 0 0 2000px rgba(0,0,0,.38);
+  }
+  .scanLineAnim{
+    position:absolute;left:12%;right:12%;top:38%;height:2px;background:var(--mango);
+    animation:scanmove 1.6s ease-in-out infinite;
+    box-shadow:0 0 8px var(--mango);
+  }
+  @keyframes scanmove{
+    0%{top:39%;} 50%{top:60%;} 100%{top:39%;}
+  }
+  .scanHint{
+    position:absolute;bottom:36px;left:0;right:0;text-align:center;
+    color:#fff;font-size:12.5px;opacity:.85;
+  }
+  .scanFallback{
+    position:absolute;inset:0;display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:12px;
+    color:#fff;text-align:center;padding:30px;
+  }
+  .scanFallback button{
+    background:var(--mango);color:#fff;border:none;padding:10px 18px;border-radius:999px;font-weight:600;
+  }
+
+  /* ---------- Done / final receipt ---------- */
+  .doneWrap{padding:18px 20px 6px;}
+  .doneCheck{
+    width:52px;height:52px;border-radius:50%;background:var(--green-soft);
+    display:flex;align-items:center;justify-content:center;margin:4px auto 10px;color:var(--green-deep);
+  }
+  .doneTitle{text-align:center;font-weight:700;font-size:16px;}
+  .doneSub{text-align:center;color:var(--ink-soft);font-size:12.5px;margin-top:2px;}
+
+  .printArea{display:none;}
+
+  .toast{
+    position:fixed;left:50%;bottom:96px;transform:translate(-50%,12px);
+    background:var(--green-ink);color:#fff;
+    padding:11px 18px;border-radius:999px;font-size:13px;font-weight:500;
+    box-shadow:var(--shadow);
+    opacity:0;pointer-events:none;transition:all .25s ease;
+    z-index:60;display:flex;align-items:center;gap:8px;
+    max-width:88%;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{
+      display:block !important;
+      position:absolute;top:0;left:0;width:280px;
+      font-family:var(--font-mono);font-size:12px;color:#000;
+      padding:10px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brandmark">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 4h2l1.6 10.6a2 2 0 0 0 2 1.7h7.6a2 2 0 0 0 2-1.6L20.4 8H7" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="20" r="1.4" fill="#fff"/><circle cx="17" cy="20" r="1.4" fill="#fff"/></svg>
+    </div>
+    <div class="brand-text">
+      <span class="name">FM99 · Kasir Pintar</span>
+      <span class="sub" id="clock">Farmers Market Margo City</span>
+    </div>
+    <button class="dailyChip" id="dailyBtn">
+      <span>Hari ini</span>
+      <b id="dailyTotal">Rp0</b>
+    </button>
+  </header>
+
+  <div class="scanRow">
+    <div class="scanField">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M3 5v14M7 5v14M10 5v14M15 5v14M17 5v14M21 5v14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <input id="searchInput" placeholder="Scan barcode / ketik nama barang" autocomplete="off" inputmode="search" autofocus>
+      <button class="clearBtn" id="clearBtn" hidden>&times;</button>
+    </div>
+    <button class="cameraBtn" id="cameraBtn" title="Pindai dengan kamera" aria-label="Pindai dengan kamera">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M4 8h2.5l1.2-2h8.6l1.2 2H20a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="13.5" r="3.4" stroke="#fff" stroke-width="1.7"/></svg>
+    </button>
+  </div>
+
+  <div class="chips" id="chips"></div>
+
+  <main class="grid" id="grid"></main>
+</div>
+
+<div class="cartBar" id="cartBar">
+  <div class="cartBarInfo">
+    <span class="cnt" id="cartCount">0 barang</span>
+    <span class="tot num" id="cartTotal">Rp0</span>
+  </div>
+  <button id="openCartBtn">
+    Lihat Struk
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 15l6-6 6 6" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+</div>
+
+<!-- CART DRAWER -->
+<div class="overlay" id="cartOverlay">
+  <div class="drawer">
+    <div class="drawerHandle"></div>
+    <div class="receiptHead">
+      <h2>STRUK BELANJA</h2>
+      <div class="receiptSub">FM99 · Farmers Market Margo City</div>
+    </div>
+    <div class="receiptList" id="receiptList"></div>
+    <div class="receiptTotals">
+      <div class="rowTotal"><span>Total</span><span class="num" id="subtotalVal">Rp0</span></div>
+    </div>
+    <div class="cashSection">
+      <label>UANG DITERIMA</label>
+      <input id="cashInput" inputmode="numeric" placeholder="0">
+      <div class="quickCash" id="quickCash"></div>
+      <div class="changeRow" id="changeRow"><span>Kembalian</span><span class="num" id="changeVal">Rp0</span></div>
+    </div>
+    <div class="drawerActions">
+      <button id="closeCartBtn">Tutup</button>
+      <button id="checkoutBtn" disabled>Selesaikan Transaksi</button>
+    </div>
+  </div>
+</div>
+
+<!-- DONE / RECEIPT OVERLAY -->
+<div class="overlay" id="doneOverlay">
+  <div class="drawer">
+    <div class="drawerHandle"></div>
+    <div class="doneWrap">
+      <div class="doneCheck">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="doneTitle">Transaksi Selesai</div>
+      <div class="doneSub" id="doneSub">Struk siap dicetak</div>
+    </div>
+    <div class="receiptList" id="doneList"></div>
+    <div class="receiptTotals">
+      <div class="rowTotal"><span>Total</span><span class="num" id="doneTotal">Rp0</span></div>
+    </div>
+    <div class="drawerActions">
+      <button id="printBtn">Cetak Struk</button>
+      <button id="newTransactionBtn">Transaksi Baru</button>
+    </div>
+  </div>
+</div>
+
+<!-- CAMERA SCAN OVERLAY -->
+<div class="overlay scanOverlay" id="scanOverlay">
+  <div class="scanTop">
+    <span>Arahkan ke barcode</span>
+    <button id="closeScanBtn">Tutup</button>
+  </div>
+  <div class="scannerViewport" id="scannerViewport"></div>
+  <div class="scanFrame"></div>
+  <div class="scanLineAnim"></div>
+  <div class="scanHint">Barcode akan terdeteksi otomatis</div>
+  <div class="scanFallback" id="scanFallback">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.3 3.9 2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/></svg>
+    <div>Kamera tidak dapat diakses.<br>Gunakan pemindai USB atau ketik manual.</div>
+    <button id="fallbackCloseBtn">Tutup</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="printArea">
+  <div id="printContent"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- DATA ---------------- */
+  const PRODUCTS = [
+{"barcode":"30344763","name":"5 DAYS CROISSANT FAMILY PACK 5X60GR BAG","price":36000,"category":"Roti & Bakery"},
+{"barcode":"30351056","name":"5DAYS MINI CROISSANT 128GR","price":17000,"category":"Roti & Bakery"},
+{"barcode":"30365562","name":"CAFFINO OAT MARIE LATTE 190ML BTL","price":9000,"category":"Minuman"},
+{"barcode":"30365563","name":"CAFFINO SPANISH LATTE 190ML BTL","price":9000,"category":"Minuman"},
+{"barcode":"30012940","name":"CHITATO BEEF BARBEQUE 65GR PAK","price":14000,"category":"Snack & Biskuit"},
+{"barcode":"30361087","name":"CHITATO LITE AYAM BAWANG 65GR","price":14000,"category":"Snack & Biskuit"},
+{"barcode":"30347806","name":"CHITATO LITE NORI SEAWEED 65 GR","price":14000,"category":"Snack & Biskuit"},
+{"barcode":"30323911","name":"CHUBA CASSAVA CHIPS CHILI BALADO 125GR","price":14000,"category":"Snack & Biskuit"},
+{"barcode":"30366993","name":"CHUBA KRIPIK SINGKONG KEJU 125G","price":14000,"category":"Snack & Biskuit"},
+{"barcode":"30362037","name":"CIMORY YOGHURT BITES BERRY BLEND 120ML","price":10000,"category":"Susu & Yoghurt"},
+{"barcode":"30362080","name":"CIMORY YOGHURT BITES BLUEBERRY 120M","price":10000,"category":"Susu & Yoghurt"},
+{"barcode":"30362038","name":"CIMORY YOGHURT BITES S/BERRY 120ML","price":10000,"category":"Susu & Yoghurt"},
+{"barcode":"30362035","name":"CIMORY YOGHURT BITES S/BERRY MANGO 120ML","price":10000,"category":"Susu & Yoghurt"},
+{"barcode":"30300210","name":"DETTOL ANTISEPTIC WET WIPES 10S","price":16000,"category":"Kesehatan"},
+{"barcode":"30225084","name":"FRENCH FRIES 2000 PREMIUM 62GR","price":12000,"category":"Snack & Biskuit"},
+{"barcode":"30013198","name":"GLICO POCKY CHOCOLATE STICK 47GR PAK","price":10000,"category":"Snack & Biskuit"},
+{"barcode":"30013199","name":"GLICO POCKY STRAWBERRY STICK 45GR PAK","price":11000,"category":"Snack & Biskuit"},
+{"barcode":"30348956","name":"GURIBEE BBQ BALADO 68GR","price":10000,"category":"Snack & Biskuit"},
+{"barcode":"30320776","name":"HANSAPLAST DISNEY FROZEN 10s","price":17000,"category":"Kesehatan"},
+{"barcode":"30340438","name":"HANSAPLAST FINGER STRIPS 6'S","price":16000,"category":"Kesehatan"},
+{"barcode":"30364410","name":"INDOMIE X POP MIE GORENG 80G","price":7000,"category":"Mie Instan"},
+{"barcode":"30350430","name":"KANZLER SINGLES BAKSO KEJU 48 GR","price":10000,"category":"Snack & Biskuit"},
+{"barcode":"30350431","name":"KANZLER SINGLES BAKSO ORIGINAL 48 GR","price":10000,"category":"Snack & Biskuit"},
+{"barcode":"30354580","name":"KANZLER SINGLES GOCHUJANG 60GR","price":10000,"category":"Snack & Biskuit"},
+{"barcode":"30221724","name":"KANZLER SINGLES KEJU 60G","price":10000,"category":"Snack & Biskuit"},
+{"barcode":"30221723","name":"KANZLER SINGLES ORIGINAL 65G","price":10000,"category":"Snack & Biskuit"},
+{"barcode":"30013311","name":"KINDER BUENO 40GR PAK","price":21000,"category":"Snack & Biskuit"},
+{"barcode":"30311167","name":"KINDER JOY T24 BOYS 20GR","price":16000,"category":"Snack & Biskuit"},
+{"barcode":"30311168","name":"KINDER JOY T24 GIRLS 20GR","price":16000,"category":"Snack & Biskuit"},
+{"barcode":"30348208","name":"MILK LIFE UHT FULL CREAM TEENS 200ML","price":7000,"category":"Susu & Yoghurt"},
+{"barcode":"30363368","name":"MILK LIFE UHT MILKSHAKE COOKIES CRM 200M","price":7000,"category":"Susu & Yoghurt"},
+{"barcode":"30348207","name":"MILK LIFE UHT TEENS STRAWBERRY 200ML","price":7000,"category":"Susu & Yoghurt"},
+{"barcode":"30369203","name":"MILKITA MILKY BAR CHOCO 15GR","price":6000,"category":"Susu & Yoghurt"},
+{"barcode":"30368438","name":"MILKITA MILKY BAR COLORFUL CRUNCH 15G","price":5000,"category":"Susu & Yoghurt"},
+{"barcode":"30326410","name":"POP MIE AYAM BAWANG LAPEER TIME 75G CUP","price":7000,"category":"Mie Instan"},
+{"barcode":"30230791","name":"POP MIE GORENG SPC LAPEER TIME 80G CUP","price":7000,"category":"Mie Instan"},
+{"barcode":"30029494","name":"POP MIE SOTO AYAM LAPEER TIME 77G CUP","price":7000,"category":"Mie Instan"},
+{"barcode":"30300354","name":"ROMA SARI GANDUM SUSU&COKELAT 115GR","price":14000,"category":"Snack & Biskuit"},
+{"barcode":"30301695","name":"SEDAAP MIE GORENG CUP 85GR","price":7000,"category":"Mie Instan"},
+{"barcode":"30335393","name":"SEDAAP MIE KOREAN SPICY CHICKEN CUP 81G","price":7000,"category":"Mie Instan"},
+{"barcode":"30210537","name":"SOYJOY RAISIN ALMOND 30GR PAK","price":12000,"category":"Snack & Biskuit"},
+{"barcode":"30235249","name":"SOYJOY STRAWBERRY 30GR PAK","price":12000,"category":"Snack & Biskuit"},
+{"barcode":"30248596","name":"TEH PUCUK HARUM JASMINE 500ML","price":9000,"category":"Minuman"},
+{"barcode":"30302903","name":"TEH PUCUK HARUM LESS SUGAR 500ML","price":9000,"category":"Minuman"},
+{"barcode":"30210049","name":"TESSA TRAVEL PACK TP-09 50'S","price":9000,"category":"Kesehatan"},
+{"barcode":"30332875","name":"V-SOY MULTI GRAIN SOY MILK 200ML","price":10000,"category":"Susu & Yoghurt"},
+{"barcode":"30309019","name":"VIT MINERAL WATER 550ML BTL","price":5000,"category":"Minuman"},
+{"barcode":"30370694","name":"HYDROPLUS ISOTONIC 350ML","price":7000,"category":"Minuman"},
+{"barcode":"30362668","name":"HYDROPLUS ISOTONIC 500ML","price":9000,"category":"Minuman"},
+{"barcode":"30356358","name":"LOTUS BISCOFF SANDWICH MILK CHOCO 110GR","price":34000,"category":"Snack & Biskuit"},
+{"barcode":"30356360","name":"LOTUS BISCOFF SANDWICH CREAM 110GR","price":34000,"category":"Snack & Biskuit"},
+{"barcode":"30356359","name":"LOTUS BISCOFF SANDWICH VANILLA 110GR","price":34000,"category":"Snack & Biskuit"},
+{"barcode":"30309018","name":"VIT MINERAL WATER 1.5ML BTL","price":8000,"category":"Minuman"},
+{"barcode":"30359916","name":"KELLOGGS COCO FILLS POUCH 60GR","price":13000,"category":"Snack & Biskuit"},
+{"barcode":"30334517","name":"NESTLE MILO SEREAL COKELAT 23","price":10000,"category":"Snack & Biskuit"},
+{"barcode":"30369649","name":"FLOATY SNACK ORIGINAL 60GR","price":12000,"category":"Snack & Biskuit"},
+{"barcode":"30369750","name":"FLOATY SNACK TERSERAH 60GR","price":12000,"category":"Snack & Biskuit"},
+{"barcode":"30343259","name":"FOXS MINI BLSSM BARLEY&CHERRY MINT 125GR","price":10000,"category":"Snack & Biskuit"},
+{"barcode":"30366708","name":"NESTLE KITKAT CHOCOLATE DRINK 220ML","price":14000,"category":"Minuman"},
+{"barcode":"30362261","name":"DELFI CHA CHA PEANUT COLOUR B2G1 (3X20G","price":12000,"category":"Snack & Biskuit"},
+{"barcode":"30362260","name":"DELFI CHA CHA MILK CHOCO B2G1 (3X 20GR)","price":12000,"category":"Snack & Biskuit"},
+{"barcode":"30013056","name":"MONDE SNACK GOLD","price":7000,"category":"Snack & Biskuit"},
+{"barcode":"30322919","name":"FRESH AVOCADO JUICE","price":32000,"category":"Buah Segar"},
+{"barcode":"30322918","name":"FRESH MANGO JUICE","price":32000,"category":"Buah Segar"},
+{"barcode":"30311196","name":"MIX FRUITS","price":48000,"category":"Buah Segar"},
+{"barcode":"30020568","name":"PISANG SUNPRIDE CAVENDISE","price":31000,"category":"Buah Segar"}
+  ];
+
+  const byBarcode = {};
+  PRODUCTS.forEach(p=>{ byBarcode[p.barcode] = p; });
+  const CATEGORIES = ["Semua", ...Array.from(new Set(PRODUCTS.map(p=>p.category)))];
+
+  /* ---------------- STATE ---------------- */
+  let cart = {};          // barcode -> qty
+  let activeCategory = "Semua";
+  let searchText = "";
+  let quaggaRunning = false;
+  let lastScanTs = 0;
+
+  const STORE_KEY = "fm99_kasir_cart_v1";
+  const DAILY_KEY = "fm99_kasir_daily_v1";
+
+  function loadCart(){
+    try{
+      const raw = localStorage.getItem(STORE_KEY);
+      if(raw) cart = JSON.parse(raw);
+    }catch(e){ cart = {}; }
+  }
+  function saveCart(){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(cart)); }catch(e){}
+  }
+  function loadDaily(){
+    try{
+      const raw = JSON.parse(localStorage.getItem(DAILY_KEY) || "{}");
+      const today = new Date().toDateString();
+      if(raw.date === today) return raw.total || 0;
+      return 0;
+    }catch(e){ return 0; }
+  }
+  function addDaily(amount){
+    try{
+      const today = new Date().toDateString();
+      const current = loadDaily();
+      localStorage.setItem(DAILY_KEY, JSON.stringify({date:today, total: current+amount}));
+      renderDaily();
+    }catch(e){}
+  }
+  function renderDaily(){
+    document.getElementById('dailyTotal').textContent = toRupiah(loadDaily());
+  }
+
+  function toRupiah(n){
+    return "Rp" + Math.round(n).toLocaleString('id-ID');
+  }
+
+  /* ---------------- CLOCK ---------------- */
+  function tickClock(){
+    const d = new Date();
+    const opts = {hour:'2-digit', minute:'2-digit'};
+    const dateStr = d.toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'});
+    document.getElementById('clock').textContent = dateStr + " · " + d.toLocaleTimeString('id-ID', opts);
+  }
+
+  /* ---------------- RENDER CHIPS ---------------- */
+  function renderChips(){
+    const wrap = document.getElementById('chips');
+    wrap.innerHTML = "";
+    CATEGORIES.forEach(cat=>{
+      const b = document.createElement('button');
+      b.className = "chip" + (cat===activeCategory ? " active" : "");
+      b.textContent = cat;
+      b.addEventListener('click', ()=>{ activeCategory = cat; renderChips(); renderGrid(); });
+      wrap.appendChild(b);
+    });
+  }
+
+  /* ---------------- RENDER GRID ---------------- */
+  function filteredProducts(){
+    const q = searchText.trim().toLowerCase();
+    return PRODUCTS.filter(p=>{
+      if(activeCategory !== "Semua" && p.category !== activeCategory) return false;
+      if(!q) return true;
+      return p.name.toLowerCase().includes(q) || p.barcode.includes(q);
+    });
+  }
+
+  function renderGrid(){
+    const grid = document.getElementById('grid');
+    const list = filteredProducts();
+    grid.innerHTML = "";
+    if(list.length === 0){
+      grid.innerHTML = `<div class="emptyState">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <div><b>Barang tidak ditemukan</b><br>Coba kata kunci lain atau scan ulang barcode.</div>
+      </div>`;
+      return;
+    }
+    list.forEach(p=>{
+      const qty = cart[p.barcode] || 0;
+      const card = document.createElement('button');
+      card.className = "card" + (qty>0 ? " inCart" : "");
+      card.innerHTML = `
+        ${qty>0 ? `<span class="qtyBadge">${qty}</span>` : ""}
+        <span class="catDot">${p.category}</span>
+        <span class="pname">${escapeHtml(p.name)}</span>
+        <span class="prow">
+          <span class="price num">${toRupiah(p.price)}</span>
+          <span class="addBtn">+</span>
+        </span>`;
+      card.addEventListener('click', ()=> addToCart(p.barcode, 1, true));
+      grid.appendChild(card);
+    });
+  }
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  /* ---------------- CART LOGIC ---------------- */
+  function addToCart(barcode, delta, animate){
+    const p = byBarcode[barcode];
+    if(!p) return false;
+    const cur = cart[barcode] || 0;
+    const next = cur + delta;
+    if(next <= 0){ delete cart[barcode]; }
+    else { cart[barcode] = next; }
+    saveCart();
+    renderGrid();
+    renderCartBar();
+    if(document.getElementById('cartOverlay').classList.contains('open')) renderReceiptList();
+    if(animate && delta>0) showToast("+ " + p.name.split(' ').slice(0,4).join(' '));
+    return true;
+  }
+
+  function removeFromCart(barcode){
+    delete cart[barcode];
+    saveCart();
+    renderGrid();
+    renderCartBar();
+    renderReceiptList();
+  }
+
+  function cartEntries(){
+    return Object.keys(cart).map(bc=>({...byBarcode[bc], qty: cart[bc]})).filter(x=>x.barcode);
+  }
+
+  function cartTotal(){
+    return cartEntries().reduce((s,i)=> s + i.price*i.qty, 0);
+  }
+  function cartCount(){
+    return Object.values(cart).reduce((s,q)=>s+q,0);
+  }
+
+  function renderCartBar(){
+    const n = cartCount();
+    document.getElementById('cartCount').textContent = n + (n===1?" barang":" barang");
+    document.getElementById('cartTotal').textContent = toRupiah(cartTotal());
+    document.getElementById('openCartBtn').disabled = n===0;
+  }
+
+  function renderReceiptList(){
+    const wrap = document.getElementById('receiptList');
+    const entries = cartEntries();
+    if(entries.length===0){
+      wrap.innerHTML = `<div class="emptyCart">Keranjang masih kosong.<br>Scan atau ketuk barang untuk mulai.</div>`;
+    } else {
+      wrap.innerHTML = entries.map(i=>`
+        <div class="rline" data-bc="${i.barcode}">
+          <div class="rinfo">
+            <div class="rname">${escapeHtml(i.name)}</div>
+            <div class="runit">${toRupiah(i.price)} / pcs</div>
+          </div>
+          <div class="rqty">
+            <button data-act="minus">−</button>
+            <span>${i.qty}</span>
+            <button data-act="plus">+</button>
+          </div>
+          <div class="rtotal num">${toRupiah(i.price*i.qty)}</div>
+          <button class="rdel" data-act="del">✕</button>
+        </div>`).join('');
+      wrap.querySelectorAll('.rline').forEach(line=>{
+        const bc = line.getAttribute('data-bc');
+        line.querySelector('[data-act="plus"]').addEventListener('click', ()=>addToCart(bc,1,false));
+        line.querySelector('[data-act="minus"]').addEventListener('click', ()=>addToCart(bc,-1,false));
+        line.querySelector('[data-act="del"]').addEventListener('click', ()=>removeFromCart(bc));
+      });
+    }
+    document.getElementById('subtotalVal').textContent = toRupiah(cartTotal());
+    renderQuickCash();
+    recalcChange();
+    document.getElementById('checkoutBtn').disabled = entries.length===0;
+  }
+
+  function renderQuickCash(){
+    const total = cartTotal();
+    const wrap = document.getElementById('quickCash');
+    if(total<=0){ wrap.innerHTML=""; return; }
+    const denoms = [total, 20000, 50000, 100000, 150000, 200000]
+      .map(v=> v===total ? total : Math.ceil(total/v>1 ? total : v/1) )
+      .filter((v,i,arr)=> v>=total );
+    const opts = Array.from(new Set([total,
+      Math.ceil(total/5000)*5000,
+      Math.ceil(total/10000)*10000,
+      Math.ceil(total/20000)*20000,
+      Math.ceil(total/50000)*50000,
+      Math.ceil(total/100000)*100000
+    ])).filter(v=>v>0).sort((a,b)=>a-b).slice(0,5);
+    wrap.innerHTML = opts.map(v=>`<button data-v="${v}">${v===total? 'Uang Pas' : toRupiah(v)}</button>`).join('');
+    wrap.querySelectorAll('button').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        document.getElementById('cashInput').value = b.getAttribute('data-v');
+        recalcChange();
+      });
+    });
+  }
+
+  function recalcChange(){
+    const total = cartTotal();
+    const cashRaw = document.getElementById('cashInput').value.replace(/[^0-9]/g,'');
+    const cash = cashRaw ? parseInt(cashRaw,10) : 0;
+    const change = cash - total;
+    const row = document.getElementById('changeRow');
+    document.getElementById('changeVal').textContent = toRupiah(Math.abs(change));
+    row.classList.toggle('negative', change<0);
+    const btn = document.getElementById('checkoutBtn');
+    if(cartEntries().length===0){ btn.disabled = true; return; }
+    btn.disabled = cash < total;
+  }
+
+  /* ---------------- OVERLAYS ---------------- */
+  function openOverlay(id){ document.getElementById(id).classList.add('open'); }
+  function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
+
+  document.getElementById('openCartBtn').addEventListener('click', ()=>{
+    renderReceiptList();
+    openOverlay('cartOverlay');
+  });
+  document.getElementById('closeCartBtn').addEventListener('click', ()=> closeOverlay('cartOverlay'));
+  document.getElementById('cartOverlay').addEventListener('click', e=>{
+    if(e.target.id === 'cartOverlay') closeOverlay('cartOverlay');
+  });
+  document.getElementById('cashInput').addEventListener('input', recalcChange);
+
+  /* ---------------- CHECKOUT ---------------- */
+  document.getElementById('checkoutBtn').addEventListener('click', ()=>{
+    const entries = cartEntries();
+    if(entries.length===0) return;
+    const total = cartTotal();
+    const cashRaw = document.getElementById('cashInput').value.replace(/[^0-9]/g,'');
+    const cash = cashRaw ? parseInt(cashRaw,10) : 0;
+    if(cash < total) return;
+    const change = cash - total;
+    const now = new Date();
+
+    const listHtml = entries.map(i=>`
+      <div class="rline">
+        <div class="rinfo">
+          <div class="rname">${escapeHtml(i.name)}</div>
+          <div class="runit">${i.qty} x ${toRupiah(i.price)}</div>
+        </div>
+        <div class="rtotal num">${toRupiah(i.price*i.qty)}</div>
+      </div>`).join('');
+    document.getElementById('doneList').innerHTML = listHtml;
+    document.getElementById('doneTotal').textContent = toRupiah(total);
+    document.getElementById('doneSub').textContent = now.toLocaleString('id-ID') + " · Kembalian " + toRupiah(change);
+
+    const printLines = entries.map(i=>
+      i.name + "\\n  " + i.qty + " x " + toRupiah(i.price).replace('Rp','') + " = " + toRupiah(i.price*i.qty)
+    ).join('\\n');
+    document.getElementById('printContent').innerHTML = `
+      <div style="text-align:center;font-weight:700;">FM99 · FARMERS MARKET</div>
+      <div style="text-align:center;">Margo City</div>
+      <div style="text-align:center;">${now.toLocaleString('id-ID')}</div>
+      <div>--------------------------------</div>
+      ${entries.map(i=>`<div>${escapeHtml(i.name)}</div><div style="display:flex;justify-content:space-between;"><span>${i.qty} x ${toRupiah(i.price)}</span><span>${toRupiah(i.price*i.qty)}</span></div>`).join('')}
+      <div>--------------------------------</div>
+      <div style="display:flex;justify-content:space-between;font-weight:700;"><span>TOTAL</span><span>${toRupiah(total)}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>TUNAI</span><span>${toRupiah(cash)}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>KEMBALI</span><span>${toRupiah(change)}</span></div>
+      <div>--------------------------------</div>
+      <div style="text-align:center;">Terima kasih telah berbelanja</div>
+    `;
+
+    addDaily(total);
+    cart = {};
+    saveCart();
+    renderGrid();
+    renderCartBar();
+    document.getElementById('cashInput').value = "";
+    closeOverlay('cartOverlay');
+    openOverlay('doneOverlay');
+  });
+
+  document.getElementById('newTransactionBtn').addEventListener('click', ()=>{
+    closeOverlay('doneOverlay');
+    document.getElementById('searchInput').focus();
+  });
+  document.getElementById('printBtn').addEventListener('click', ()=> window.print());
+  document.getElementById('doneOverlay').addEventListener('click', e=>{
+    if(e.target.id==='doneOverlay') closeOverlay('doneOverlay');
+  });
+
+  /* ---------------- SEARCH / BARCODE INPUT ---------------- */
+  const searchInput = document.getElementById('searchInput');
+  const clearBtn = document.getElementById('clearBtn');
+
+  searchInput.addEventListener('input', ()=>{
+    searchText = searchInput.value;
+    clearBtn.hidden = searchText.length===0;
+    renderGrid();
+  });
+
+  searchInput.addEventListener('keydown', (e)=>{
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    const raw = searchInput.value.trim();
+    if(!raw) return;
+    if(byBarcode[raw]){
+      addToCart(raw, 1, true);
+      searchInput.value = "";
+      searchText = "";
+      clearBtn.hidden = true;
+      renderGrid();
+      return;
+    }
+    const list = filteredProducts();
+    if(list.length === 1){
+      addToCart(list[0].barcode, 1, true);
+      searchInput.value = "";
+      searchText = "";
+      clearBtn.hidden = true;
+      renderGrid();
+    } else if(list.length === 0){
+      showToast("Barang tidak ditemukan");
+    }
+  });
+
+  clearBtn.addEventListener('click', ()=>{
+    searchInput.value = "";
+    searchText = "";
+    clearBtn.hidden = true;
+    renderGrid();
+    searchInput.focus();
+  });
+
+  /* ---------------- TOAST ---------------- */
+  let toastTimer = null;
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> t.classList.remove('show'), 1400);
+  }
+
+  /* ---------------- CAMERA BARCODE SCAN ---------------- */
+  const cameraBtn = document.getElementById('cameraBtn');
+  const scanOverlay = document.getElementById('scanOverlay');
+  const scanFallback = document.getElementById('scanFallback');
+
+  function startScanner(){
+    scanFallback.style.display = 'none';
+    document.querySelector('.scanFrame').style.display='block';
+    document.querySelector('.scanLineAnim').style.display='block';
+    document.querySelector('.scanHint').style.display='block';
+    openOverlay('scanOverlay');
+
+    if(typeof Quagga === 'undefined'){
+      showScanFallback();
+      return;
+    }
+    try{
+      Quagga.init({
+        inputStream:{
+          type:"LiveStream",
+          target: document.getElementById('scannerViewport'),
+          constraints:{ facingMode:"environment", width:{ideal:1280}, height:{ideal:720} }
+        },
+        locator:{ patchSize:"medium", halfSample:true },
+        numOfWorkers: 2,
+        decoder:{ readers:["ean_reader","ean_8_reader","code_128_reader","upc_reader","upc_e_reader"] },
+        locate:true
+      }, function(err){
+        if(err){ showScanFallback(); return; }
+        Quagga.start();
+        quaggaRunning = true;
+      });
+      Quagga.onDetected(onBarcodeDetected);
+    }catch(e){
+      showScanFallback();
+    }
+  }
+
+  function showScanFallback(){
+    scanFallback.style.display = 'flex';
+    document.querySelector('.scanFrame').style.display='none';
+    document.querySelector('.scanLineAnim').style.display='none';
+    document.querySelector('.scanHint').style.display='none';
+  }
+
+  function onBarcodeDetected(result){
+    const now = Date.now();
+    if(now - lastScanTs < 1200) return;
+    const code = result && result.codeResult && result.codeResult.code;
+    if(!code) return;
+    lastScanTs = now;
+    const p = byBarcode[code];
+    if(p){
+      addToCart(code, 1, true);
+      try{ if(navigator.vibrate) navigator.vibrate(60); }catch(e){}
+    } else {
+      showToast("Barcode " + code + " tidak dikenal");
+    }
+  }
+
+  function stopScanner(){
+    if(quaggaRunning && typeof Quagga !== 'undefined'){
+      try{ Quagga.offDetected(onBarcodeDetected); Quagga.stop(); }catch(e){}
+    }
+    quaggaRunning = false;
+    closeOverlay('scanOverlay');
+  }
+
+  cameraBtn.addEventListener('click', startScanner);
+  document.getElementById('closeScanBtn').addEventListener('click', stopScanner);
+  document.getElementById('fallbackCloseBtn').addEventListener('click', stopScanner);
+
+  /* ---------------- INIT ---------------- */
+  loadCart();
+  renderChips();
+  renderGrid();
+  renderCartBar();
+  renderDaily();
+  tickClock();
+  setInterval(tickClock, 30000);
+
+})();
+</script>
+</body>
+</html>
