@@ -405,6 +405,33 @@
   }
   .toast.show{opacity:1;transform:translate(-50%,0);}
 
+  /* ---------- History overlay ---------- */
+  #syncStatus{transition:color .2s ease;}
+  #syncStatus.offline{color:#F3B199;}
+  .historyHead{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 20px 12px;border-bottom:1px dashed var(--line);flex-shrink:0;
+  }
+  .historyHead h2{margin:0;font-size:15px;letter-spacing:.3px;}
+  .historyHead .refreshBtn{
+    border:none;background:var(--surface-2);color:var(--green-deep);
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .historyHead .refreshBtn.spinning svg{animation:spin .7s linear infinite;}
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .historySub{padding:8px 20px 0;font-size:11.5px;color:var(--ink-soft);flex-shrink:0;}
+  .historyList{overflow-y:auto;flex:1;padding:8px 20px 20px;}
+  .hItem{
+    border-bottom:1px dashed var(--line);
+    padding:12px 0;
+  }
+  .hItem .hTop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+  .hItem .hTime{font-size:11px;color:var(--ink-soft);font-family:var(--font-mono);}
+  .hItem .hTotal{font-family:var(--font-mono);font-weight:700;color:var(--green-deep);font-size:14px;}
+  .hItem .hItems{font-size:11.5px;color:var(--ink-soft);margin-top:4px;line-height:1.5;}
+  .emptyHistory{padding:50px 10px;text-align:center;color:var(--ink-soft);font-size:13px;}
+
   @media print{
     body *{visibility:hidden;}
     #printArea, #printArea *{visibility:visible;}
@@ -428,6 +455,10 @@
       <span class="name">FM99 · Kasir Pintar</span>
       <span class="sub" id="clock">Farmers Market Margo City</span>
     </div>
+    <button class="dailyChip" id="historyBtn" title="Riwayat Transaksi" aria-label="Riwayat Transaksi">
+      <span id="syncStatus">● Riwayat</span>
+      <b id="historyCount">0 transaksi</b>
+    </button>
     <button class="dailyChip" id="dailyBtn">
       <span>Hari ini</span>
       <b id="dailyTotal">Rp0</b>
@@ -508,6 +539,24 @@
   </div>
 </div>
 
+<!-- HISTORY OVERLAY -->
+<div class="overlay" id="historyOverlay">
+  <div class="drawer">
+    <div class="drawerHandle"></div>
+    <div class="historyHead">
+      <h2>Riwayat Transaksi</h2>
+      <button class="refreshBtn" id="refreshHistoryBtn" title="Refresh" aria-label="Refresh">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="historySub" id="historySub">Menghubungkan...</div>
+    <div class="historyList" id="historyList"></div>
+    <div class="drawerActions">
+      <button id="closeHistoryBtn">Tutup</button>
+    </div>
+  </div>
+</div>
+
 <!-- CAMERA SCAN OVERLAY -->
 <div class="overlay scanOverlay" id="scanOverlay">
   <div class="scanTop">
@@ -532,6 +581,142 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.7.1/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.7.1/firebase-database-compat.js"></script>
+<script>
+(function(){
+  "use strict";
+  /* ---------------- FIREBASE (riwayat transaksi real-time) ----------------
+     Ganti nilai di bawah dengan config Firebase project FM99 kamu
+     (Firebase Console > Project Settings > General > Your apps > SDK setup).
+  ------------------------------------------------------------------------ */
+  const firebaseConfig = {
+    apiKey: "PASTE_API_KEY_DI_SINI",
+    authDomain: "PASTE_AUTH_DOMAIN_DI_SINI",
+    databaseURL: "PASTE_DATABASE_URL_DI_SINI",
+    projectId: "PASTE_PROJECT_ID_DI_SINI",
+    storageBucket: "PASTE_STORAGE_BUCKET_DI_SINI",
+    messagingSenderId: "PASTE_SENDER_ID_DI_SINI",
+    appId: "PASTE_APP_ID_DI_SINI"
+  };
+
+  let fbReady = false;
+  let transactionsRef = null;
+
+  function toRupiahFB(n){
+    return "Rp" + Math.round(n||0).toLocaleString('id-ID');
+  }
+
+  function setSyncStatus(ok, label){
+    const el = document.getElementById('syncStatus');
+    if(!el) return;
+    el.textContent = (ok ? "● " : "○ ") + label;
+    el.classList.toggle('offline', !ok);
+  }
+
+  function initFirebaseHistory(){
+    const looksConfigured = firebaseConfig.apiKey && !String(firebaseConfig.apiKey).startsWith("PASTE_");
+    if(!looksConfigured || typeof firebase === 'undefined'){
+      setSyncStatus(false, "Belum tersambung");
+      const sub = document.getElementById('historySub');
+      if(sub) sub.textContent = "Firebase belum dikonfigurasi. Lengkapi firebaseConfig di kode untuk mengaktifkan riwayat real-time.";
+      return;
+    }
+    try{
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      transactionsRef = db.ref('kasir_fm99/transactions');
+      fbReady = true;
+      setSyncStatus(true, "Riwayat");
+      attachHistoryListener();
+    }catch(e){
+      setSyncStatus(false, "Gagal tersambung");
+    }
+  }
+
+  function attachHistoryListener(){
+    if(!transactionsRef) return;
+    const sub = document.getElementById('historySub');
+    if(sub) sub.textContent = "Memuat riwayat...";
+    transactionsRef.orderByChild('timestamp').limitToLast(200).on('value', snap=>{
+      const rows = [];
+      snap.forEach(child=>{ rows.push(child.val()); });
+      rows.reverse(); // terbaru di atas
+      renderHistoryList(rows);
+      setSyncStatus(true, "Riwayat");
+    }, err=>{
+      setSyncStatus(false, "Offline");
+      const sub2 = document.getElementById('historySub');
+      if(sub2) sub2.textContent = "Tidak bisa memuat riwayat (offline atau config salah).";
+    });
+  }
+
+  function refreshHistoryNow(){
+    if(!fbReady || !transactionsRef){ initFirebaseHistory(); return; }
+    const btn = document.getElementById('refreshHistoryBtn');
+    if(btn) btn.classList.add('spinning');
+    transactionsRef.orderByChild('timestamp').limitToLast(200).once('value').then(snap=>{
+      const rows = [];
+      snap.forEach(child=>{ rows.push(child.val()); });
+      rows.reverse();
+      renderHistoryList(rows);
+      setSyncStatus(true, "Riwayat");
+    }).catch(()=>{
+      setSyncStatus(false, "Offline");
+    }).finally(()=>{
+      if(btn) setTimeout(()=>btn.classList.remove('spinning'), 400);
+    });
+  }
+
+  function renderHistoryList(rows){
+    const wrap = document.getElementById('historyList');
+    const countEl = document.getElementById('historyCount');
+    if(!wrap) return;
+    if(countEl) countEl.textContent = rows.length + " transaksi";
+    if(rows.length === 0){
+      wrap.innerHTML = `<div class="emptyHistory">Belum ada transaksi tercatat.</div>`;
+      const sub = document.getElementById('historySub');
+      if(sub) sub.textContent = "Tersinkron real-time ke semua perangkat.";
+      return;
+    }
+    wrap.innerHTML = rows.map(tx=>{
+      const items = (tx.items||[]).map(i=> i.qty + "x " + i.name).join(', ');
+      const time = tx.timeString || '';
+      return `<div class="hItem">
+        <div class="hTop"><span class="hTime">${time}</span><span class="hTotal num">${toRupiahFB(tx.total)}</span></div>
+        <div class="hItems">${items}</div>
+      </div>`;
+    }).join('');
+    const sub = document.getElementById('historySub');
+    if(sub) sub.textContent = "Tersinkron real-time ke semua perangkat.";
+  }
+
+  window.pushTransactionToCloud = function(entries, total, cash, change, timeString){
+    if(!fbReady || !transactionsRef) return;
+    try{
+      transactionsRef.push({
+        items: entries.map(i=>({name:i.name, qty:i.qty, price:i.price})),
+        total, cash, change, timeString,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      });
+    }catch(e){ /* offline, biarkan transaksi lokal tetap jalan */ }
+  };
+
+  document.getElementById('historyBtn').addEventListener('click', ()=>{
+    document.getElementById('historyOverlay').classList.add('open');
+    if(!fbReady) initFirebaseHistory();
+  });
+  document.getElementById('closeHistoryBtn').addEventListener('click', ()=>{
+    document.getElementById('historyOverlay').classList.remove('open');
+  });
+  document.getElementById('historyOverlay').addEventListener('click', e=>{
+    if(e.target.id === 'historyOverlay') document.getElementById('historyOverlay').classList.remove('open');
+  });
+  document.getElementById('refreshHistoryBtn').addEventListener('click', refreshHistoryNow);
+
+  initFirebaseHistory();
+})();
+</script>
 <script>
 (function(){
   "use strict";
@@ -882,6 +1067,9 @@
     `;
 
     addDaily(total);
+    if(typeof pushTransactionToCloud === 'function'){
+      pushTransactionToCloud(entries, total, cash, change, now.toLocaleString('id-ID'));
+    }
     cart = {};
     saveCart();
     renderGrid();
